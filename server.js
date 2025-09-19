@@ -274,6 +274,13 @@ app.get('/generate-pdf', async (req, res) => {
   }
 });
 
+// Lightweight health check endpoint for platform monitoring
+app.get('/healthz', (req, res) => {
+  const state = mongoose.connection.readyState; // 0=disconnected,1=connected,2=connecting,3=disconnecting
+  const status = state === 1 ? 'ok' : (state === 2 ? 'connecting' : 'db_down');
+  return res.status(status === 'ok' ? 200 : 503).json({ status, dbState: state });
+});
+
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
 
