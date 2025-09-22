@@ -16,7 +16,24 @@ import { v4 as uuidv4 } from 'uuid'; // Import uuid
 dotenv.config();
 const app = express();
 app.use(helmet());
-app.use(cors());
+// CORS: allow specific origins incl. Hostinger domain and local dev
+const allowedOrigins = [
+  'https://lightgreen-pig-834553.hostingersite.com',
+  process.env.FRONTEND_URL,
+  process.env.ALLOWED_ORIGINS
+].filter(Boolean).flatMap(v => String(v).split(',').map(s => s.trim())).filter(Boolean);
+
+app.use(cors({
+  origin: function(origin, cb) {
+    if (!origin) return cb(null, true);
+    if (allowedOrigins.length === 0) return cb(null, true);
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('Not allowed by CORS'));
+  },
+  credentials: true
+}));
+// Explicit preflight for all routes
+app.options('*', cors());
 app.use(express.json({ limit: '1mb' }));
 app.use(morgan('tiny'));
 
@@ -283,5 +300,3 @@ app.get('/healthz', (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
-
-
